@@ -1,32 +1,41 @@
-import sys
+import tkinter as tk
+from tkinter import filedialog, messagebox
 import cv2
 import numpy as np
 import tensorflow as tf
 
 # Load the model
-model_path = sys.argv[1]  # Use the first command-line argument as the model filename
+# Load the model
+model_path = r'C:\Users\Bless\Desktop\Artificial-Intelligence\Traffic\TientcheuBlessjr\best_model.h5'  # Use raw string
 model = tf.keras.models.load_model(model_path)
 
-# Function to prepare input image
 def prepare_image(image_path):
-    print(f"Loading image from: {image_path}")
     img = cv2.imread(image_path)
     if img is None:
-        print(f"Failed to load image. Check if the file exists and is accessible.")
-        raise ValueError(f"Image at path '{image_path}' could not be loaded. Please check the path.")
-    img = cv2.resize(img, (30, 30))  # Resize to the input size expected by the model
-    img = img.astype('float32') / 255.0  # Normalize the image
-    img = np.expand_dims(img, axis=0)  # Add batch dimension
+        raise ValueError("Image could not be loaded.")
+    img = cv2.resize(img, (30, 30))
+    img = img.astype('float32') / 255.0
+    img = np.expand_dims(img, axis=0)
     return img
 
-# Example image prediction
-if __name__ == "__main__":
-    if len(sys.argv) < 3:
-        sys.exit("Usage: python predict_sign.py model.h5 image_path")
+def predict():
+    image_path = filedialog.askopenfilename()
+    if not image_path:
+        return
 
-    image_path = sys.argv[2]  # Use the second command-line argument as the image filename
-    prepared_image = prepare_image(image_path)
-    prediction = model.predict(prepared_image)
-    predicted_class = np.argmax(prediction, axis=1)
+    try:
+        prepared_image = prepare_image(image_path)
+        prediction = model.predict(prepared_image)
+        predicted_class = np.argmax(prediction, axis=1)
+        messagebox.showinfo("Prediction Result", f"Predicted class: {predicted_class[0]}")
+    except Exception as e:
+        messagebox.showerror("Error", str(e))
 
-    print(f"Predicted class: {predicted_class[0]}")
+# Create the GUI
+root = tk.Tk()
+root.title("Traffic Sign Predictor")
+
+predict_button = tk.Button(root, text="Select Image", command=predict)
+predict_button.pack(pady=20)
+
+root.mainloop()
